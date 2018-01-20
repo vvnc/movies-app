@@ -15,17 +15,21 @@ public abstract class CustomOnScrollListener extends RecyclerView.OnScrollListen
     @Override
     public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
         super.onScrolled(recyclerView, dx, dy);
-        int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
+
+        // If collection has too many items then delete the first (invisible) ones
         int totalCount = layoutManager.getItemCount();
-        if(totalCount > threshold) {
+        if (totalCount > threshold) {
             onTooManyItems();
         }
-        if(lastVisibleItemPosition > totalCount - 1 - epsilon) {
-            onLoadMore();
+
+        // If reached the bottom then load next page:
+        int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
+        if (lastVisibleItemPosition > totalCount - 1 - epsilon) {
+            onLoadNextPage();
         }
     }
 
-    public abstract void onLoadMore();
+    public abstract void onLoadNextPage();
 
     public abstract void onTooManyItems();
 }

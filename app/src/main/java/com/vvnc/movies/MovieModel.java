@@ -9,10 +9,12 @@ import com.vvnc.lorem.LoremIpsumGenerator;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 
 class MovieModel {
     private static Calendar calendar;
+    private static final int pageItemsCount = 10;
     private static final int wordCountMin = 1;
     private static final int wordCountMax = 15;
     private static Random random;
@@ -44,11 +46,12 @@ class MovieModel {
         return poster;
     }
 
-    static ArrayList<MovieModel> getNewPortion(Context context, int count){
-        ArrayList<MovieModel> data = new ArrayList<>(count);
+    static ArrayList<MovieModel> getNewPortion(Context context, int page){
+        // Debug version: randomly generated data:
+        ArrayList<MovieModel> data = new ArrayList<>(pageItemsCount);
         Drawable icon = genNextIcon(context);
-        for(int i = 0x00; i < count; ++i) {
-            data.add(new MovieModel(genNextTitle(), genNextDate(), icon));
+        for(int i = 0x00; i < pageItemsCount; ++i) {
+            data.add(new MovieModel(genNextTitle(page), genNextDate(), icon));
         }
         return data;
     }
@@ -59,10 +62,13 @@ class MovieModel {
         return calendar.getTime();
     }
 
-    private static String genNextTitle(){
+    private static String genNextTitle(int page){
         Random rand = new Random();
         int wordCount = rand.nextInt(wordCountMax - wordCountMin) + wordCountMin;
-        return LoremIpsumGenerator.getNext(wordCount, Capitalization.FIRST_WORD);
+        return String.format(Locale.ENGLISH,
+                "Page: %d. %s",
+                page,
+                LoremIpsumGenerator.getNext(wordCount, Capitalization.FIRST_WORD));
     }
 
     private static Drawable genNextIcon(Context context){

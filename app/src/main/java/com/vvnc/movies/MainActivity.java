@@ -13,7 +13,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private CustomOnScrollListener onScrollListener;
     private LinearLayoutManager layoutManager;
-    final int loadStep = 10;
+    private int currentPage = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,14 +24,14 @@ public class MainActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        movies = MovieModel.getNewPortion(this,loadStep);
+        movies = MovieModel.getNewPortion(this, currentPage);
         adapter = new MoviesAdapter(movies);
         recyclerView.setAdapter(adapter);
 
         onScrollListener = new CustomOnScrollListener(layoutManager) {
             @Override
-            public void onLoadMore() {
-                loadMoreData(loadStep);
+            public void onLoadNextPage() {
+                loadMoreData();
             }
 
             @Override
@@ -42,16 +42,17 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnScrollListener(onScrollListener);
     }
 
-    private void loadMoreData(int count) {
+    private void loadMoreData() {
         int insertedPosition = movies.size() + 1;
-        movies.addAll(MovieModel.getNewPortion(this, count));
-        adapter.notifyItemRangeInserted(insertedPosition, count);
+        ArrayList<MovieModel> newPortion = MovieModel.getNewPortion(this, ++currentPage);
+        movies.addAll(newPortion);
+        adapter.notifyItemRangeInserted(insertedPosition, newPortion.size());
     }
 
     private void removeFirstItems() {
         // Remove all items before first visible item:
         int firstVisiblePos = layoutManager.findFirstVisibleItemPosition();
         movies.subList(0, firstVisiblePos - 1).clear();
-        adapter.notifyItemRangeRemoved(0, firstVisiblePos );
+        adapter.notifyItemRangeRemoved(0, firstVisiblePos);
     }
 }
