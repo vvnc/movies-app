@@ -13,7 +13,6 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private CustomOnScrollListener onScrollListener;
     private LinearLayoutManager layoutManager;
-    private int currentPage = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,14 +23,14 @@ public class MainActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        movies = MovieModel.getNewPortion(this, currentPage);
+        movies = MovieModel.loadPage(this, 0);
         adapter = new MoviesAdapter(movies);
         recyclerView.setAdapter(adapter);
 
-        onScrollListener = new CustomOnScrollListener(layoutManager) {
+        onScrollListener = new CustomOnScrollListener(layoutManager, 1) {
             @Override
-            public void onLoadNextPage() {
-                loadMoreData();
+            public void onLoadPage(int page) {
+                loadMoreData(page);
             }
 
             @Override
@@ -42,9 +41,9 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.addOnScrollListener(onScrollListener);
     }
 
-    private void loadMoreData() {
+    private void loadMoreData(int page) {
         int insertedPosition = movies.size() + 1;
-        ArrayList<MovieModel> newPortion = MovieModel.getNewPortion(this, ++currentPage);
+        ArrayList<MovieModel> newPortion = MovieModel.loadPage(this, page);
         movies.addAll(newPortion);
         adapter.notifyItemRangeInserted(insertedPosition, newPortion.size());
     }

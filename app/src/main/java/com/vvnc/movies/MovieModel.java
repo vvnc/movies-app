@@ -46,7 +46,7 @@ class MovieModel {
         return poster;
     }
 
-    static ArrayList<MovieModel> getNewPortion(Context context, int page){
+    static ArrayList<MovieModel> loadPage(Context context, int page){
         // Debug version: randomly generated data:
         ArrayList<MovieModel> data = new ArrayList<>(pageItemsCount);
         Drawable icon = genNextIcon(context);

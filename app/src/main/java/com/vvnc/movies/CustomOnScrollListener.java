@@ -5,11 +5,13 @@ import android.support.v7.widget.RecyclerView;
 
 public abstract class CustomOnScrollListener extends RecyclerView.OnScrollListener {
     private LinearLayoutManager layoutManager;
+    private int currentPage;
     private final int epsilon = 1;
     private final int threshold = 25;
 
-    CustomOnScrollListener(LinearLayoutManager layoutManager) {
+    CustomOnScrollListener(LinearLayoutManager layoutManager, int startPage) {
         this.layoutManager = layoutManager;
+        this.currentPage = startPage;
     }
 
     @Override
@@ -25,11 +27,11 @@ public abstract class CustomOnScrollListener extends RecyclerView.OnScrollListen
         // If reached the bottom then load next page:
         int lastVisibleItemPosition = layoutManager.findLastVisibleItemPosition();
         if (lastVisibleItemPosition > totalCount - 1 - epsilon) {
-            onLoadNextPage();
+            onLoadPage(currentPage++);
         }
     }
 
-    public abstract void onLoadNextPage();
+    public abstract void onLoadPage(int pageNumber);
 
     public abstract void onTooManyItems();
 }
