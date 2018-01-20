@@ -84,7 +84,8 @@ public class LoremIpsumGenerator {
         currentWord = 0;
     }
 
-    public static String getNext(int wordCount, Capitalization capitalization) {
+    public static String getNext(int wordCount, Capitalization capitalization)
+            throws LoremException {
         // Self test:
         if (currentWord < 0) {
             currentWord = 0;
