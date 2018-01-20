@@ -93,7 +93,6 @@ class MovieModel {
             R.drawable.hamburger_,
             R.drawable.hot_dog,
             R.drawable.ice_cream,
-            R.drawable.ic_launcher_background,
             R.drawable.ketchup_,
             R.drawable.meatball_,
             R.drawable.melon_,
