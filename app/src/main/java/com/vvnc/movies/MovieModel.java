@@ -51,7 +51,7 @@ class MovieModel {
         ArrayList<MovieModel> data = new ArrayList<>(pageItemsCount);
         Drawable icon = genNextIcon(context);
         for(int i = 0x00; i < pageItemsCount; ++i) {
-            data.add(new MovieModel(genNextTitle(page), genNextDate(), icon));
+            data.add(new MovieModel(genNextTitle(page, i), genNextDate(), icon));
         }
         return data;
     }
@@ -62,12 +62,13 @@ class MovieModel {
         return calendar.getTime();
     }
 
-    private static String genNextTitle(int page){
+    private static String genNextTitle(int page, int itemNum){
         Random rand = new Random();
         int wordCount = rand.nextInt(wordCountMax - wordCountMin) + wordCountMin;
         return String.format(Locale.ENGLISH,
-                "Page: %d. %s",
+                "Page: %d, item: %d. %s",
                 page,
+                itemNum,
                 LoremIpsumGenerator.getNext(wordCount, Capitalization.FIRST_WORD));
     }
 
