@@ -1,11 +1,13 @@
 package com.vvnc.movies;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
     private MoviesAdapter adapter;
@@ -42,6 +44,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadMoreData(int page) {
+        Log.d("LOAD_MORE", "page: " + page);
+        try {
+            TimeUnit.SECONDS.sleep(3);
+        } catch (InterruptedException e) {
+            Log.d("SLEEP_FAILED", e.toString());
+        }
         int insertedPosition = movies.size() + 1;
         ArrayList<MovieModel> newPortion = MovieModel.loadPage(this, page);
         movies.addAll(newPortion);
