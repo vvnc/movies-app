@@ -2,9 +2,10 @@ package com.vvnc.movies;
 
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,13 +13,28 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
+    static class RVUpdateHandler extends Handler {
+        private MoviesAdapter adapter;
+
+        RVUpdateHandler(MoviesAdapter adapter) {
+            this.adapter = adapter;
+        }
+
+        public void handleMessage(android.os.Message msg) {
+            adapter.notifyItemRangeInserted(msg.arg1, msg.arg2);
+        }
+    }
+
     private MoviesAdapter adapter;
+    private RVUpdateHandler handler;
     private ArrayList<MovieModel> movies;
     private RecyclerView recyclerView;
     private CustomOnScrollListener onScrollListener;
     private LinearLayoutManager layoutManager;
     private Random random;
     private int[] placeholderIcons;
+    private int currentPage = 0;
+    private Drawable currentPlaceholderIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
         movies = MovieModel.loadPage(0, genNextPlaceholderIcon());
         adapter = new MoviesAdapter(movies);
+        handler = new RVUpdateHandler(adapter);
         recyclerView.setAdapter(adapter);
 
         onScrollListener = new CustomOnScrollListener(layoutManager, 1) {
@@ -102,23 +119,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadMoreData(int page) {
-        Log.d("LOAD_MORE", "page: " + page);
-        try {
-            TimeUnit.SECONDS.sleep(3);
-        } catch (InterruptedException e) {
-            Log.d("SLEEP_FAILED", e.toString());
-        }
-        int insertedPosition = movies.size() + 1;
-        ArrayList<MovieModel> newPortion = MovieModel.loadPage(page, genNextPlaceholderIcon());
-        movies.addAll(newPortion);
-        adapter.notifyItemRangeInserted(insertedPosition, newPortion.size());
+        currentPage = page;
+        currentPlaceholderIcon = genNextPlaceholderIcon();
+        Thread loaderThread = new Thread(new Runnable() {
+            public void run() {
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    Log.d("SLEEP_FAILED", e.toString());
+                }
+                int insertStart = movies.size();
+                ArrayList<MovieModel> newPortion = MovieModel.loadPage(
+                        currentPage,
+                        currentPlaceholderIcon);
+                movies.addAll(newPortion);
+                Message msg = new Message();
+                msg.arg1 = insertStart;
+                msg.arg2 = newPortion.size();
+                handler.sendMessage(msg);
+            }
+        });
+        loaderThread.start();
     }
 
     private void removeFirstItems() {
-        // Remove all items before first visible item:
-        int firstVisiblePos = layoutManager.findFirstVisibleItemPosition();
-        movies.subList(0, firstVisiblePos - 1).clear();
-        adapter.notifyItemRangeRemoved(0, firstVisiblePos);
+        recyclerView.post(new Runnable() {
+            @Override
+            public void run() {
+                // Remove all items before first visible item:
+                int firstVisiblePos = layoutManager.findFirstVisibleItemPosition();
+                if (firstVisiblePos > 1) {
+                    movies.subList(0, firstVisiblePos - 1).clear();
+                    adapter.notifyItemRangeRemoved(0, firstVisiblePos - 1);
+                }
+            }
+        });
     }
 
     private Drawable genNextPlaceholderIcon() {
