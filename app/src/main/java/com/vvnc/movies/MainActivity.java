@@ -13,15 +13,21 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
-    static class RVUpdateHandler extends Handler {
+    private static class RVUpdateHandler extends Handler {
         private MoviesAdapter adapter;
+        private CustomOnScrollListener onScrollListener;
 
-        RVUpdateHandler(MoviesAdapter adapter) {
+        RVUpdateHandler(MoviesAdapter adapter, CustomOnScrollListener onScrollListener) {
             this.adapter = adapter;
+            this.onScrollListener = onScrollListener;
         }
 
         public void handleMessage(android.os.Message msg) {
+            // Notify recycler view that the new items are inserted:
             adapter.notifyItemRangeInserted(msg.arg1, msg.arg2);
+
+            // Tell on scroll listener that the loading is over:
+            onScrollListener.setIsLoading(false);
         }
     }
 
@@ -29,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
     private RVUpdateHandler handler;
     private ArrayList<MovieModel> movies;
     private RecyclerView recyclerView;
-    private CustomOnScrollListener onScrollListener;
     private LinearLayoutManager layoutManager;
     private Random random;
     private int[] placeholderIcons;
@@ -101,10 +106,9 @@ public class MainActivity extends AppCompatActivity {
 
         movies = MovieModel.loadPage(0, genNextPlaceholderIcon());
         adapter = new MoviesAdapter(movies);
-        handler = new RVUpdateHandler(adapter);
-        recyclerView.setAdapter(adapter);
-
-        onScrollListener = new CustomOnScrollListener(layoutManager, 1) {
+        CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
+                1)
+        {
             @Override
             public void onLoadPage(int page) {
                 loadMoreData(page);
@@ -115,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
                 removeFirstItems();
             }
         };
+        handler = new RVUpdateHandler(adapter, onScrollListener);
+        recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(onScrollListener);
     }
 
