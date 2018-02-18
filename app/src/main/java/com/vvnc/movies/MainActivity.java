@@ -47,63 +47,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         random = new Random();
-        placeholderIcons = new int[]{
-                R.drawable.apple_,
-                R.drawable.bacon_,
-                R.drawable.bananas_,
-                R.drawable.bell_pepper,
-                R.drawable.broccoli_,
-                R.drawable.carrot_,
-                R.drawable.cheese_,
-                R.drawable.cherry_,
-                R.drawable.chicken_leg,
-                R.drawable.chili_pepper,
-                R.drawable.chocolate_,
-                R.drawable.coffee_cup,
-                R.drawable.cookie_,
-                R.drawable.corn_,
-                R.drawable.croissant_,
-                R.drawable.cupcake_,
-                R.drawable.donut_,
-                R.drawable.eggplant_,
-                R.drawable.fortune_cookie,
-                R.drawable.french_fries,
-                R.drawable.fried_egg,
-                R.drawable.grapes_,
-                R.drawable.hamburger_,
-                R.drawable.hot_dog,
-                R.drawable.ice_cream,
-                R.drawable.ketchup_,
-                R.drawable.meatball_,
-                R.drawable.melon_,
-                R.drawable.milk_,
-                R.drawable.milkshake_,
-                R.drawable.mushroom_,
-                R.drawable.mustard_,
-                R.drawable.onigiri_,
-                R.drawable.orange_,
-                R.drawable.pea_,
-                R.drawable.peach_,
-                R.drawable.pear_,
-                R.drawable.piece_of_cake,
-                R.drawable.pineapple_,
-                R.drawable.pizza_,
-                R.drawable.popsicle_,
-                R.drawable.pudding_,
-                R.drawable.radish_,
-                R.drawable.scallion_,
-                R.drawable.soda_,
-                R.drawable.strawberry_,
-                R.drawable.sushi_,
-                R.drawable.taco_,
-                R.drawable.toast_,
-                R.drawable.watermelon_
-        };
+        initPlaceholderIcons();
 
         recyclerView = findViewById(R.id.movies_recycler_view);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-
         movies = MovieModel.loadPage(0, genNextPlaceholderIcon());
         adapter = new MoviesAdapter(movies);
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
@@ -160,6 +108,61 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void initPlaceholderIcons() {
+        placeholderIcons = new int[]{
+                R.drawable.apple_,
+                R.drawable.bacon_,
+                R.drawable.bananas_,
+                R.drawable.bell_pepper,
+                R.drawable.broccoli_,
+                R.drawable.carrot_,
+                R.drawable.cheese_,
+                R.drawable.cherry_,
+                R.drawable.chicken_leg,
+                R.drawable.chili_pepper,
+                R.drawable.chocolate_,
+                R.drawable.coffee_cup,
+                R.drawable.cookie_,
+                R.drawable.corn_,
+                R.drawable.croissant_,
+                R.drawable.cupcake_,
+                R.drawable.donut_,
+                R.drawable.eggplant_,
+                R.drawable.fortune_cookie,
+                R.drawable.french_fries,
+                R.drawable.fried_egg,
+                R.drawable.grapes_,
+                R.drawable.hamburger_,
+                R.drawable.hot_dog,
+                R.drawable.ice_cream,
+                R.drawable.ketchup_,
+                R.drawable.meatball_,
+                R.drawable.melon_,
+                R.drawable.milk_,
+                R.drawable.milkshake_,
+                R.drawable.mushroom_,
+                R.drawable.mustard_,
+                R.drawable.onigiri_,
+                R.drawable.orange_,
+                R.drawable.pea_,
+                R.drawable.peach_,
+                R.drawable.pear_,
+                R.drawable.piece_of_cake,
+                R.drawable.pineapple_,
+                R.drawable.pizza_,
+                R.drawable.popsicle_,
+                R.drawable.pudding_,
+                R.drawable.radish_,
+                R.drawable.scallion_,
+                R.drawable.soda_,
+                R.drawable.strawberry_,
+                R.drawable.sushi_,
+                R.drawable.taco_,
+                R.drawable.toast_,
+                R.drawable.watermelon_
+        };
     }
 
     private Drawable genNextPlaceholderIcon() {
