@@ -12,6 +12,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
+import com.vvnc.lorem.LoremIpsumGenerator;
+
 public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
         private MoviesAdapter adapter;
@@ -36,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<MovieModel> movies;
     private RecyclerView recyclerView;
     private LinearLayoutManager layoutManager;
-    private Random random;
+    private int iconIndex = 0;
     private int[] placeholderIcons;
     private int currentPage = 0;
     private Drawable currentPlaceholderIcon;
@@ -46,8 +48,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        random = new Random();
         initPlaceholderIcons();
+        MovieModel.resetLoad();
 
         recyclerView = findViewById(R.id.movies_recycler_view);
         layoutManager = new LinearLayoutManager(this);
@@ -55,8 +57,7 @@ public class MainActivity extends AppCompatActivity {
         movies = MovieModel.loadPage(0, genNextPlaceholderIcon());
         adapter = new MoviesAdapter(movies);
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
-                1)
-        {
+                1) {
             @Override
             public void onLoadPage(int page) {
                 loadMoreData(page);
@@ -112,6 +113,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void initPlaceholderIcons() {
         placeholderIcons = new int[]{
+                R.drawable.coffee_cup,
+                R.drawable.chocolate_,
+                R.drawable.cookie_,
+                R.drawable.croissant_,
+                R.drawable.cupcake_,
                 R.drawable.apple_,
                 R.drawable.bacon_,
                 R.drawable.bananas_,
@@ -122,12 +128,7 @@ public class MainActivity extends AppCompatActivity {
                 R.drawable.cherry_,
                 R.drawable.chicken_leg,
                 R.drawable.chili_pepper,
-                R.drawable.chocolate_,
-                R.drawable.coffee_cup,
-                R.drawable.cookie_,
                 R.drawable.corn_,
-                R.drawable.croissant_,
-                R.drawable.cupcake_,
                 R.drawable.donut_,
                 R.drawable.eggplant_,
                 R.drawable.fortune_cookie,
@@ -167,7 +168,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Drawable genNextPlaceholderIcon() {
         // Get next random icon from resources:
-        return getResources().getDrawable(
-                placeholderIcons[random.nextInt(placeholderIcons.length)]);
+        Drawable result = getResources().getDrawable(placeholderIcons[iconIndex]);
+        iconIndex = iconIndex + 1 < placeholderIcons.length ? iconIndex + 1 : 0;
+        return result;
     }
 }

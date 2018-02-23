@@ -11,9 +11,11 @@ import java.util.Random;
 
 class MovieModel {
     private static Calendar calendar;
+    private static Random rand;
     private static final int pageItemsCount = 10;
     private static final int wordCountMin = 1;
     private static final int wordCountMax = 15;
+    private static final int seed = 100;
 
     private String title;
     private Date dvdDate;
@@ -21,6 +23,7 @@ class MovieModel {
 
     static {
         calendar = Calendar.getInstance();
+        resetLoad();
     }
 
     private MovieModel(String title, Date dvdDate, Drawable poster) {
@@ -41,6 +44,11 @@ class MovieModel {
         return poster;
     }
 
+    static void resetLoad() {
+        rand = new Random(seed);
+        LoremIpsumGenerator.reset();
+    }
+
     static ArrayList<MovieModel> loadPage(int page, Drawable placeholderIcon){
         // Debug version: randomly generated data:
         ArrayList<MovieModel> data = new ArrayList<>(pageItemsCount);
@@ -57,7 +65,6 @@ class MovieModel {
     }
 
     private static String genNextTitle(int page, int itemNum){
-        Random rand = new Random();
         int wordCount = rand.nextInt(wordCountMax - wordCountMin) + wordCountMin;
         return String.format(Locale.ENGLISH,
                 "Page: %d, item: %d. %s",
