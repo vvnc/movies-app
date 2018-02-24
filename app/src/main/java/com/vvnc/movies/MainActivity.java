@@ -12,8 +12,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
-import com.vvnc.lorem.LoremIpsumGenerator;
-
 public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
         private MoviesAdapter adapter;
