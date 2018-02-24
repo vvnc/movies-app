@@ -1,7 +1,6 @@
 package com.vvnc.movies;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -36,26 +35,32 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<MovieModel> movies;
     private RecyclerView recyclerView;
     private LinearLayoutManager layoutManager;
-    private int iconIndex = 0;
     private int[] placeholderIcons;
-    private int currentPage = 0;
+    private int currentPage;
+    private final String CURRENT_PAGE_KEY = "CURRENT_PAGE";
     private Drawable currentPlaceholderIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
+        if (savedInstanceState != null) {
+            currentPage = savedInstanceState.getInt(CURRENT_PAGE_KEY);
+        }
+        else {
+            currentPage = 0;
+        }
+
+        setContentView(R.layout.activity_main);
         initPlaceholderIcons();
         MovieModel.resetLoad();
-
         recyclerView = findViewById(R.id.movies_recycler_view);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        movies = MovieModel.loadPage(0, genNextPlaceholderIcon());
+        movies = MovieModel.loadPage(currentPage, genNextPlaceholderIcon());
         adapter = new MoviesAdapter(movies);
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
-                1) {
+                ++currentPage) {
             @Override
             public void onLoadPage(int page) {
                 loadMoreData(page);
@@ -69,6 +74,14 @@ public class MainActivity extends AppCompatActivity {
         handler = new RVUpdateHandler(adapter, onScrollListener);
         recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(onScrollListener);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        int previousPage = currentPage == 0 ? 0 : currentPage - 1;
+        savedInstanceState.putInt(CURRENT_PAGE_KEY, previousPage);
+
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     private void loadMoreData(int page) {
@@ -166,8 +179,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Drawable genNextPlaceholderIcon() {
         // Get next random icon from resources:
-        Drawable result = getResources().getDrawable(placeholderIcons[iconIndex]);
-        iconIndex = iconIndex + 1 < placeholderIcons.length ? iconIndex + 1 : 0;
+        Drawable result = getResources().getDrawable(
+                placeholderIcons[currentPage % placeholderIcons.length]);
         return result;
     }
 }
