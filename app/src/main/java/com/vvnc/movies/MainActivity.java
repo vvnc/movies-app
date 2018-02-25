@@ -14,15 +14,24 @@ public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
         private MoviesAdapter adapter;
         private CustomOnScrollListener onScrollListener;
+        private LinearLayoutManager layoutManager;
 
-        RVUpdateHandler(MoviesAdapter adapter, CustomOnScrollListener onScrollListener) {
+        RVUpdateHandler(MoviesAdapter adapter,
+                        CustomOnScrollListener onScrollListener,
+                        LinearLayoutManager layoutManager) {
             this.adapter = adapter;
             this.onScrollListener = onScrollListener;
+            this.layoutManager = layoutManager;
         }
 
         public void handleMessage(android.os.Message msg) {
             // Notify recycler view that the new items are inserted:
             adapter.notifyItemRangeInserted(msg.arg1, msg.arg2);
+
+            // If inserted to the very beginning, then scroll to the top:
+            if(msg.arg1 == 0) {
+                layoutManager.scrollToPosition(0);
+            }
 
             // Tell on scroll listener that the loading is over:
             onScrollListener.setIsLoading(false);
@@ -52,10 +61,10 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.movies_recycler_view);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        ArrayList<MovieModel> movies = MovieModel.loadPage(currentPage, genNextPlaceholderIcon());
-        adapter = new MoviesAdapter(movies);
+        adapter = new MoviesAdapter();
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
-                ++currentPage) {
+                currentPage)
+        {
             @Override
             public void onLoadPage(int page) {
                 loadMoreData(page);
@@ -66,15 +75,14 @@ public class MainActivity extends AppCompatActivity {
                 removeFirstItems();
             }
         };
-        handler = new RVUpdateHandler(adapter, onScrollListener);
+        handler = new RVUpdateHandler(adapter, onScrollListener, layoutManager);
         recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(onScrollListener);
     }
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        int previousPage = currentPage == 0 ? 0 : currentPage - 1;
-        savedInstanceState.putInt(CURRENT_PAGE_KEY, previousPage);
+        savedInstanceState.putInt(CURRENT_PAGE_KEY, currentPage);
 
         super.onSaveInstanceState(savedInstanceState);
     }

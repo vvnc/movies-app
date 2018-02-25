@@ -43,6 +43,10 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         }
     }
 
+    MoviesAdapter() {
+        this.movies = new ArrayList<>();
+    }
+
     MoviesAdapter(ArrayList<MovieModel> firstPage) {
         this.movies = new ArrayList<>();
         this.movies.add(firstPage);
