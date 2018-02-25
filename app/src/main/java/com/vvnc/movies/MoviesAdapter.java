@@ -26,6 +26,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         private TextView title;
         private TextView dvdDate;
         private ImageView poster;
+
         private ItemViewHolder(View itemView) {
             super(itemView);
             title = itemView.findViewById(R.id.movie_title);
@@ -36,6 +37,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
 
     private static class ProgressViewHolder extends BaseViewHolder {
         private ProgressBar progressBar;
+
         private ProgressViewHolder(View itemView) {
             super(itemView);
             progressBar = itemView.findViewById(R.id.progressBar);
@@ -49,13 +51,13 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
 
     @Override
     public int getItemViewType(int position) {
-        return position >= movies.size() ? ItemType.PROGRESS.ordinal(): ItemType.MOVIE.ordinal();
+        return position >= movies.size() ? ItemType.PROGRESS.ordinal() : ItemType.MOVIE.ordinal();
     }
 
     // Create new views (invoked by the layout manager)
     @Override
     public BaseViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if(viewType == ItemType.MOVIE.ordinal()) {
+        if (viewType == ItemType.MOVIE.ordinal()) {
             View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.list_item, parent, false);
             return new ItemViewHolder(v);
@@ -82,7 +84,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
             h.progressBar.setIndeterminate(true);
         } else {
             throw new MoviesException("Unexpected view holder type in the recycler view: " +
-                holder);
+                    holder);
         }
     }
 
