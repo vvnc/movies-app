@@ -15,7 +15,6 @@ class MovieModel {
     private static final int pageItemsCount = 10;
     private static final int wordCountMin = 1;
     private static final int wordCountMax = 15;
-    private static final int seed = 100;
 
     private String title;
     private Date dvdDate;
@@ -23,7 +22,8 @@ class MovieModel {
 
     static {
         calendar = Calendar.getInstance();
-        resetLoad();
+        rand = new Random();
+        LoremIpsumGenerator.reset();
     }
 
     private MovieModel(String title, Date dvdDate, Drawable poster) {
@@ -42,11 +42,6 @@ class MovieModel {
 
     Drawable getPoster() {
         return poster;
-    }
-
-    static void resetLoad() {
-        rand = new Random(seed);
-        LoremIpsumGenerator.reset();
     }
 
     static ArrayList<MovieModel> loadPage(int page, Drawable placeholderIcon){

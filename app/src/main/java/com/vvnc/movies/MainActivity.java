@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         initPlaceholderIcons();
-        MovieModel.resetLoad();
         recyclerView = findViewById(R.id.movies_recycler_view);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
@@ -172,9 +171,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Drawable genNextPlaceholderIcon() {
-        // Get next random icon from resources:
-        Drawable result = getResources().getDrawable(
-                placeholderIcons[currentPage % placeholderIcons.length]);
-        return result;
+        // Get next icon from resources:
+        return getResources().getDrawable(placeholderIcons[currentPage % placeholderIcons.length]);
     }
 }
