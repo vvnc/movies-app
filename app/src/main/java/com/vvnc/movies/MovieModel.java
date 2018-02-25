@@ -3,6 +3,8 @@ import com.vvnc.lorem.Capitalization;
 import com.vvnc.lorem.LoremIpsumGenerator;
 
 import android.graphics.drawable.Drawable;
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -45,6 +47,11 @@ class MovieModel {
     }
 
     static ArrayList<MovieModel> loadPage(int page, Drawable placeholderIcon){
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            Log.d("LOAD_MORE_INTERRUPTED", e.toString());
+        }
         // Debug version: randomly generated data:
         ArrayList<MovieModel> data = new ArrayList<>(pageItemsCount);
         for(int i = 0x00; i < pageItemsCount; ++i) {

@@ -9,7 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
@@ -85,11 +84,6 @@ public class MainActivity extends AppCompatActivity {
         currentPlaceholderIcon = genNextPlaceholderIcon();
         Thread loaderThread = new Thread(new Runnable() {
             public void run() {
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    Log.d("SLEEP_FAILED", e.toString());
-                }
                 ArrayList<MovieModel> newPortion = MovieModel.loadPage(
                         currentPage,
                         currentPlaceholderIcon);
