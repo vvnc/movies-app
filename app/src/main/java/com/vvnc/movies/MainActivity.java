@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private MoviesAdapter adapter;
     private RVUpdateHandler handler;
     private RecyclerView recyclerView;
+    private LinearLayoutManager layoutManager;
     private int[] placeholderIcons;
     private int currentPage;
     private final String CURRENT_PAGE_KEY = "CURRENT_PAGE";
@@ -59,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initPlaceholderIcons();
         recyclerView = findViewById(R.id.movies_recycler_view);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         adapter = new MoviesAdapter();
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
