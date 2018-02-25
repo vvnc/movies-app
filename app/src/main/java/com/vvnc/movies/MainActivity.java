@@ -32,7 +32,6 @@ public class MainActivity extends AppCompatActivity {
 
     private MoviesAdapter adapter;
     private RVUpdateHandler handler;
-    private ArrayList<MovieModel> movies;
     private RecyclerView recyclerView;
     private LinearLayoutManager layoutManager;
     private int[] placeholderIcons;
@@ -46,8 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (savedInstanceState != null) {
             currentPage = savedInstanceState.getInt(CURRENT_PAGE_KEY);
-        }
-        else {
+        } else {
             currentPage = 0;
         }
 
@@ -57,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.movies_recycler_view);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        movies = MovieModel.loadPage(currentPage, genNextPlaceholderIcon());
+        ArrayList<MovieModel> movies = MovieModel.loadPage(currentPage, genNextPlaceholderIcon());
         adapter = new MoviesAdapter(movies);
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
                 ++currentPage) {
@@ -94,13 +92,12 @@ public class MainActivity extends AppCompatActivity {
                 } catch (InterruptedException e) {
                     Log.d("SLEEP_FAILED", e.toString());
                 }
-                int insertStart = movies.size();
                 ArrayList<MovieModel> newPortion = MovieModel.loadPage(
                         currentPage,
                         currentPlaceholderIcon);
-                movies.addAll(newPortion);
+                int insertStartIndex = adapter.pushBackPage(newPortion);
                 Message msg = new Message();
-                msg.arg1 = insertStart;
+                msg.arg1 = insertStartIndex;
                 msg.arg2 = newPortion.size();
                 handler.sendMessage(msg);
             }
@@ -112,12 +109,9 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.post(new Runnable() {
             @Override
             public void run() {
-                // Remove all items before first visible item:
-                int firstVisiblePos = layoutManager.findFirstVisibleItemPosition();
-                if (firstVisiblePos > 1) {
-                    movies.subList(0, firstVisiblePos - 1).clear();
-                    adapter.notifyItemRangeRemoved(0, firstVisiblePos - 1);
-                }
+                // Just remove the first page:
+                int removedCount = adapter.removeFirstPage();
+                adapter.notifyItemRangeRemoved(0, removedCount);
             }
         });
     }

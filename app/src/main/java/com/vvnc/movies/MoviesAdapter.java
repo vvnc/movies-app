@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHolder> {
-    private ArrayList<MovieModel> movies;
+    private ArrayList<ArrayList<MovieModel>> movies;
 
     static abstract class BaseViewHolder extends RecyclerView.ViewHolder {
         private BaseViewHolder(View itemView) {
@@ -22,7 +22,6 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
     }
 
     private static class ItemViewHolder extends BaseViewHolder {
-        // each data item is just a string in this case
         private TextView title;
         private TextView dvdDate;
         private ImageView poster;
@@ -44,14 +43,18 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         }
     }
 
-    // Provide a suitable constructor (depends on the kind of dataset)
-    MoviesAdapter(ArrayList<MovieModel> movies) {
-        this.movies = movies;
+    MoviesAdapter(ArrayList<MovieModel> firstPage) {
+        this.movies = new ArrayList<>();
+        this.movies.add(firstPage);
     }
 
     @Override
     public int getItemViewType(int position) {
-        return position >= movies.size() ? ItemType.PROGRESS.ordinal() : ItemType.MOVIE.ordinal();
+        if (position >= calcMoviesSize()) {
+            return ItemType.PROGRESS.ordinal();
+        } else {
+            return ItemType.MOVIE.ordinal();
+        }
     }
 
     // Create new views (invoked by the layout manager)
@@ -75,10 +78,14 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
             ItemViewHolder h = (ItemViewHolder) holder;
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
-            h.title.setText(movies.get(position).getTitle());
+            MovieModel item = getItem(position);
+            if (item == null) {
+                throw new MoviesException("Couldn't get the item by position: " + position);
+            }
+            h.title.setText(item.getTitle());
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-            h.dvdDate.setText(dateFormat.format(movies.get(position).getDvdDate()));
-            h.poster.setImageDrawable(movies.get(position).getPoster());
+            h.dvdDate.setText(dateFormat.format(item.getDvdDate()));
+            h.poster.setImageDrawable(item.getPoster());
         } else if (holder instanceof ProgressViewHolder) {
             ProgressViewHolder h = (ProgressViewHolder) holder;
             h.progressBar.setIndeterminate(true);
@@ -90,6 +97,44 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
 
     @Override
     public int getItemCount() {
-        return movies.size() + 1; // because the extra one is the progress bar
+        return calcMoviesSize() + 1; // because the extra one is the progress bar
+    }
+
+    int pushBackPage(ArrayList<MovieModel> page) {
+        int insertStartIndex = calcMoviesSize();
+        movies.add(page);
+        return insertStartIndex;
+    }
+
+    int removeFirstPage() {
+        int removedCount = movies.get(0).size();
+        movies.remove(0);
+        return removedCount;
+    }
+
+    private int calcMoviesSize() {
+        if (movies == null) {
+            return 0;
+        }
+        int size = 0;
+        for (ArrayList<MovieModel> page : movies) {
+            size += page.size();
+        }
+        return size;
+    }
+
+    private MovieModel getItem(int position) {
+        if (position < 0) {
+            return null;
+        }
+        int currentPosition = position;
+        for (ArrayList<MovieModel> page : movies) {
+            if (currentPosition < page.size()) {
+                return page.get(currentPosition);
+            } else {
+                currentPosition -= page.size();
+            }
+        }
+        return null; // reached the end of collection, position is out of boundaries
     }
 }
