@@ -83,7 +83,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putInt(CURRENT_PAGE_KEY, currentPage);
+        ItemCoordinates coordinates = adapter.getItemCoordinates(
+                layoutManager.findFirstVisibleItemPosition());
+        if(coordinates == null) {
+            savedInstanceState.putInt(CURRENT_PAGE_KEY, currentPage);
+        } else {
+            savedInstanceState.putInt(CURRENT_PAGE_KEY, coordinates.getPageNum());
+        }
 
         super.onSaveInstanceState(savedInstanceState);
     }

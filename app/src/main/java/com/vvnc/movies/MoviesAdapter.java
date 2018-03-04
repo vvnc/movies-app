@@ -116,6 +116,21 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         return removedCount;
     }
 
+    ItemCoordinates getItemCoordinates(int position) {
+        if (position < 0) {
+            return null;
+        }
+        int currentPosition = position;
+        for (Page<MovieModel> page : movies) {
+            if (currentPosition < page.getItems().size()) {
+                return new ItemCoordinates(page.getPageNum(), currentPosition);
+            } else {
+                currentPosition -= page.getItems().size();
+            }
+        }
+        return null; // reached the end of collection, position is out of boundaries
+    }
+
     private int calcMoviesSize() {
         if (movies == null) {
             return 0;
