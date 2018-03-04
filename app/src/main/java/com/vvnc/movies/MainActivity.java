@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<MovieModel> newPortion = MovieModel.loadPage(
                         currentPage,
                         currentPlaceholderIcon);
-                int insertStartIndex = adapter.pushBackPage(newPortion);
+                int insertStartIndex = adapter.pushBackPage(currentPage, newPortion);
                 Message msg = new Message();
                 msg.arg1 = insertStartIndex;
                 msg.arg2 = newPortion.size();

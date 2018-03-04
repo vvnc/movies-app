@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHolder> {
-    private ArrayList<ArrayList<MovieModel>> movies;
+    private ArrayList<Page<MovieModel>> movies;
 
     static abstract class BaseViewHolder extends RecyclerView.ViewHolder {
         private BaseViewHolder(View itemView) {
@@ -47,9 +47,9 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         this.movies = new ArrayList<>();
     }
 
-    MoviesAdapter(ArrayList<MovieModel> firstPage) {
+    MoviesAdapter(int pageNum, ArrayList<MovieModel> firstPage) {
         this.movies = new ArrayList<>();
-        this.movies.add(firstPage);
+        this.movies.add(new Page<>(pageNum, firstPage));
     }
 
     @Override
@@ -104,14 +104,14 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         return calcMoviesSize() + 1; // because the extra one is the progress bar
     }
 
-    int pushBackPage(ArrayList<MovieModel> page) {
+    int pushBackPage(int pageNum, ArrayList<MovieModel> page) {
         int insertStartIndex = calcMoviesSize();
-        movies.add(page);
+        movies.add(new Page<>(pageNum, page));
         return insertStartIndex;
     }
 
     int removeFirstPage() {
-        int removedCount = movies.get(0).size();
+        int removedCount = movies.get(0).getItems().size();
         movies.remove(0);
         return removedCount;
     }
@@ -121,8 +121,8 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
             return 0;
         }
         int size = 0;
-        for (ArrayList<MovieModel> page : movies) {
-            size += page.size();
+        for (Page<MovieModel> page : movies) {
+            size += page.getItems().size();
         }
         return size;
     }
@@ -132,11 +132,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
             return null;
         }
         int currentPosition = position;
-        for (ArrayList<MovieModel> page : movies) {
-            if (currentPosition < page.size()) {
-                return page.get(currentPosition);
+        for (Page<MovieModel> page : movies) {
+            if (currentPosition < page.getItems().size()) {
+                return page.getItems().get(currentPosition);
             } else {
-                currentPosition -= page.size();
+                currentPosition -= page.getItems().size();
             }
         }
         return null; // reached the end of collection, position is out of boundaries
