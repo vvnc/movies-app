@@ -9,29 +9,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
         private MoviesAdapter adapter;
         private CustomOnScrollListener onScrollListener;
-        private LinearLayoutManager layoutManager;
 
         RVUpdateHandler(MoviesAdapter adapter,
-                        CustomOnScrollListener onScrollListener,
-                        LinearLayoutManager layoutManager) {
+                        CustomOnScrollListener onScrollListener) {
             this.adapter = adapter;
             this.onScrollListener = onScrollListener;
-            this.layoutManager = layoutManager;
         }
 
         public void handleMessage(android.os.Message msg) {
             // Notify recycler view that the new items are inserted:
             adapter.notifyItemRangeInserted(msg.arg1, msg.arg2);
-
-            // If inserted to the very beginning, then scroll to the top:
-            if(msg.arg1 == 0) {
-                layoutManager.scrollToPosition(0);
-            }
 
             // Tell on scroll listener that the loading is over:
             onScrollListener.setIsLoading(false);
@@ -75,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
         adapter.pushBackPage(currentPage, page);
         ++currentPage;
         adapter.notifyItemRangeInserted(0, page.size());
+        layoutManager.scrollToPosition(currentItemIndex);
 
         // Add custom on scroll listener:
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
@@ -90,9 +84,8 @@ public class MainActivity extends AppCompatActivity {
                 removeFirstItems();
             }
         };
-        handler = new RVUpdateHandler(adapter, onScrollListener, layoutManager);
+        handler = new RVUpdateHandler(adapter, onScrollListener);
         recyclerView.addOnScrollListener(onScrollListener);
-        layoutManager.scrollToPosition(currentItemIndex);
     }
 
     @Override
