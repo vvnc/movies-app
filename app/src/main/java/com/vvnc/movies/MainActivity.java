@@ -45,24 +45,38 @@ public class MainActivity extends AppCompatActivity {
     private int[] placeholderIcons;
     private int currentPage;
     private final String CURRENT_PAGE_KEY = "CURRENT_PAGE";
+    private final String CURRENT_ITEM_KEY = "CURRENT_ITEM";
     private Drawable currentPlaceholderIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Restore previous item position:
+        currentPage = 0;
+        int currentItemIndex = 0;
         if (savedInstanceState != null) {
             currentPage = savedInstanceState.getInt(CURRENT_PAGE_KEY);
-        } else {
-            currentPage = 0;
+            currentItemIndex = savedInstanceState.getInt(CURRENT_ITEM_KEY);
         }
 
+        // Init RecyclerView:
         setContentView(R.layout.activity_main);
         initPlaceholderIcons();
-        recyclerView = findViewById(R.id.movies_recycler_view);
         layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
         adapter = new MoviesAdapter();
+        recyclerView = findViewById(R.id.movies_recycler_view);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(adapter);
+
+        // Load first page:
+        Drawable icon = genNextPlaceholderIcon();
+        ArrayList<MovieModel> page = MovieModel.loadPage(currentPage, icon);
+        adapter.pushBackPage(currentPage, page);
+        ++currentPage;
+        adapter.notifyItemRangeInserted(0, page.size());
+
+        // Add custom on scroll listener:
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
                 currentPage)
         {
@@ -77,8 +91,8 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         handler = new RVUpdateHandler(adapter, onScrollListener, layoutManager);
-        recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(onScrollListener);
+        layoutManager.scrollToPosition(currentItemIndex);
     }
 
     @Override
@@ -87,8 +101,10 @@ public class MainActivity extends AppCompatActivity {
                 layoutManager.findFirstVisibleItemPosition());
         if(coordinates == null) {
             savedInstanceState.putInt(CURRENT_PAGE_KEY, currentPage);
+            savedInstanceState.putInt(CURRENT_ITEM_KEY, 0);
         } else {
             savedInstanceState.putInt(CURRENT_PAGE_KEY, coordinates.getPageNum());
+            savedInstanceState.putInt(CURRENT_ITEM_KEY, coordinates.getItemIndex());
         }
 
         super.onSaveInstanceState(savedInstanceState);
