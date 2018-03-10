@@ -14,9 +14,9 @@ import java.util.Random;
 class MovieModel {
     private static Calendar calendar;
     private static Random rand;
-    private static final int pageItemsCount = 10;
-    private static final int wordCountMin = 1;
-    private static final int wordCountMax = 15;
+    private static final int PAGE_ITEMS_COUNT = 30;
+    private static final int WORD_COUNT_MIN = 1;
+    private static final int WORD_COUNT_MAX = 15;
 
     private String title;
     private Date dvdDate;
@@ -53,8 +53,8 @@ class MovieModel {
             Log.d("LOAD_MORE_INTERRUPTED", e.toString());
         }
         // Debug version: randomly generated data:
-        ArrayList<MovieModel> data = new ArrayList<>(pageItemsCount);
-        for(int i = 0x00; i < pageItemsCount; ++i) {
+        ArrayList<MovieModel> data = new ArrayList<>(PAGE_ITEMS_COUNT);
+        for(int i = 0x00; i < PAGE_ITEMS_COUNT; ++i) {
             data.add(new MovieModel(genNextTitle(page, i), genNextDate(), placeholderIcon));
         }
         return data;
@@ -67,7 +67,7 @@ class MovieModel {
     }
 
     private static String genNextTitle(int page, int itemNum){
-        int wordCount = rand.nextInt(wordCountMax - wordCountMin) + wordCountMin;
+        int wordCount = rand.nextInt(WORD_COUNT_MAX - WORD_COUNT_MIN) + WORD_COUNT_MIN;
         return String.format(Locale.ENGLISH,
                 "Page: %d, item: %d. %s",
                 page,
