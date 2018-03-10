@@ -13,18 +13,51 @@ import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
+        static class InsertItemsMessage {
+            private int insertIndex;
+            private int insertCount;
+            private int savedItemPosition;
+
+            InsertItemsMessage(int insertIndex, int insertCount, int savedItemPosition) {
+                this.insertIndex = insertIndex;
+                this.insertCount = insertCount;
+                this.savedItemPosition = savedItemPosition;
+            }
+
+            int getInsertIndex() {
+                return insertIndex;
+            }
+
+            int getInsertCount() {
+                return insertCount;
+            }
+
+            int getSavedItemPosition() {
+                return savedItemPosition;
+            }
+        }
+
         private MoviesAdapter adapter;
         private CustomOnScrollListener onScrollListener;
+        private LinearLayoutManager layoutManager;
 
         RVUpdateHandler(MoviesAdapter adapter,
-                        CustomOnScrollListener onScrollListener) {
+                        CustomOnScrollListener onScrollListener,
+                        LinearLayoutManager layoutManager) {
             this.adapter = adapter;
             this.onScrollListener = onScrollListener;
+            this.layoutManager = layoutManager;
         }
 
         public void handleMessage(android.os.Message msg) {
             // Notify recycler view that the new items are inserted:
-            adapter.notifyItemRangeInserted(msg.arg1, msg.arg2);
+            InsertItemsMessage msgObj = (InsertItemsMessage) msg.obj;
+            adapter.notifyItemRangeInserted(msgObj.getInsertIndex(), msgObj.getInsertCount());
+
+            // Scroll to saved item (if need to):
+            if (msgObj.getSavedItemPosition() != NONE_SAVED_ITEM_POSITION) {
+                layoutManager.scrollToPosition(msgObj.getSavedItemPosition());
+            }
 
             // Tell on scroll listener that the loading is over:
             onScrollListener.setIsLoading(false);
@@ -37,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayoutManager layoutManager;
     private int[] placeholderIcons;
     private int currentPage;
+    private int savedItemPosition;
+    private static final int NONE_SAVED_ITEM_POSITION = -1;
     private final String CURRENT_PAGE_KEY = "CURRENT_PAGE";
     private final String CURRENT_ITEM_KEY = "CURRENT_ITEM";
     private Drawable currentPlaceholderIcon;
@@ -47,10 +82,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Restore previous item position:
         currentPage = 0;
-        int currentItemIndex = 0;
+        savedItemPosition = 0;  // force scroll to the start if it's the first page
         if (savedInstanceState != null) {
             currentPage = savedInstanceState.getInt(CURRENT_PAGE_KEY);
-            currentItemIndex = savedInstanceState.getInt(CURRENT_ITEM_KEY);
+            savedItemPosition = savedInstanceState.getInt(CURRENT_ITEM_KEY);
         }
 
         // Init RecyclerView:
@@ -62,18 +97,9 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
 
-        // Load first page:
-        Drawable icon = genNextPlaceholderIcon();
-        ArrayList<MovieModel> page = MovieModel.loadPage(currentPage, icon);
-        adapter.pushBackPage(currentPage, page);
-        ++currentPage;
-        adapter.notifyItemRangeInserted(0, page.size());
-        layoutManager.scrollToPosition(currentItemIndex);
-
         // Add custom on scroll listener:
         CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
-                currentPage)
-        {
+                currentPage) {
             @Override
             public void onLoadPage(int page) {
                 loadMoreData(page);
@@ -84,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
                 removeFirstItems();
             }
         };
-        handler = new RVUpdateHandler(adapter, onScrollListener);
+        handler = new RVUpdateHandler(adapter, onScrollListener, layoutManager);
         recyclerView.addOnScrollListener(onScrollListener);
     }
 
@@ -92,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     public void onSaveInstanceState(Bundle savedInstanceState) {
         ItemCoordinates coordinates = adapter.getItemCoordinates(
                 layoutManager.findFirstVisibleItemPosition());
-        if(coordinates == null) {
+        if (coordinates == null) {
             savedInstanceState.putInt(CURRENT_PAGE_KEY, currentPage);
             savedInstanceState.putInt(CURRENT_ITEM_KEY, 0);
         } else {
@@ -113,8 +139,10 @@ public class MainActivity extends AppCompatActivity {
                         currentPlaceholderIcon);
                 int insertStartIndex = adapter.pushBackPage(currentPage, newPortion);
                 Message msg = new Message();
-                msg.arg1 = insertStartIndex;
-                msg.arg2 = newPortion.size();
+                msg.obj = new RVUpdateHandler.InsertItemsMessage(insertStartIndex,
+                        newPortion.size(), savedItemPosition);
+                // Invalidate saved position:
+                savedItemPosition = NONE_SAVED_ITEM_POSITION;
                 handler.sendMessage(msg);
             }
         });
