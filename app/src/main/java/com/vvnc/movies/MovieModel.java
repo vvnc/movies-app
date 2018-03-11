@@ -14,7 +14,7 @@ import java.util.Random;
 class MovieModel {
     private static Calendar calendar;
     private static Random rand;
-    private static final int PAGE_ITEMS_COUNT = 30;
+    private static final int PAGE_ITEMS_COUNT = 10;
     private static final int WORD_COUNT_MIN = 1;
     private static final int WORD_COUNT_MAX = 15;
 

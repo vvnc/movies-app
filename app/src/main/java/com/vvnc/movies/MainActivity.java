@@ -9,7 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
@@ -68,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private RVUpdateHandler handler;
     private RecyclerView recyclerView;
     private LinearLayoutManager layoutManager;
+    private CustomOnScrollListener onScrollListener;
     private int[] placeholderIcons;
     private int currentPage;
     private int savedItemPosition;
@@ -98,16 +98,25 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         // Add custom on scroll listener:
-        CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
-                currentPage) {
+        onScrollListener = new CustomOnScrollListener(layoutManager) {
             @Override
-            public void onLoadPage(int page) {
-                loadMoreData(page);
+            public void onLoadNextPage() {
+                loadNextPage();
             }
 
             @Override
-            public void onTooManyItems() {
-                removeFirstItems();
+            public void onLoadPreviousPage() {
+                loadPreviousPage();
+            }
+
+            @Override
+            public void onRemoveFirstItems() {
+                removeFirstPage();
+            }
+
+            @Override
+            public void onRemoveLastItems() {
+                removeLastPage();
             }
         };
         handler = new RVUpdateHandler(adapter, onScrollListener, layoutManager);
@@ -129,15 +138,15 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
     }
 
-    private void loadMoreData(int page) {
-        currentPage = page;
-        currentPlaceholderIcon = genNextPlaceholderIcon();
+    private void loadNextPage() {
+        currentPage = calcCurrentPage();
+        currentPlaceholderIcon = getPlaceholderIcon(currentPage);
         Thread loaderThread = new Thread(new Runnable() {
             public void run() {
                 ArrayList<MovieModel> newPortion = MovieModel.loadPage(
                         currentPage,
                         currentPlaceholderIcon);
-                int insertStartIndex = adapter.pushBackPage(currentPage, newPortion);
+                int insertStartIndex = adapter.pushPageBack(currentPage, newPortion);
                 Message msg = new Message();
                 msg.obj = new RVUpdateHandler.InsertItemsMessage(insertStartIndex,
                         newPortion.size(), savedItemPosition);
@@ -149,13 +158,51 @@ public class MainActivity extends AppCompatActivity {
         loaderThread.start();
     }
 
-    private void removeFirstItems() {
+    private void loadPreviousPage() {
+        int firstPageNum = adapter.getFirstPageNum();
+        if (firstPageNum == 0) {
+            // Reached the beginning, nothing to load. Undo the loading:
+            onScrollListener.setIsLoading(false);
+            return;
+        }
+        final int previousPageNum = firstPageNum == -1 ? 0 : firstPageNum - 1;
+        currentPlaceholderIcon = getPlaceholderIcon(previousPageNum);
+        Thread loaderThread = new Thread(new Runnable() {
+            public void run() {
+                ArrayList<MovieModel> newPortion = MovieModel.loadPage(
+                        previousPageNum,
+                        currentPlaceholderIcon);
+                adapter.pushPageFront(previousPageNum, newPortion);
+                Message msg = new Message();
+                msg.obj = new RVUpdateHandler.InsertItemsMessage(
+                        0, newPortion.size(), NONE_SAVED_ITEM_POSITION);
+                handler.sendMessage(msg);
+            }
+        });
+        loaderThread.start();
+    }
+
+    private void removeFirstPage() {
         recyclerView.post(new Runnable() {
             @Override
             public void run() {
-                // Just remove the first page:
                 int removedCount = adapter.removeFirstPage();
-                adapter.notifyItemRangeRemoved(0, removedCount);
+                if (removedCount > -1) {
+                    adapter.notifyItemRangeRemoved(0, removedCount);
+                }
+            }
+        });
+    }
+
+    private void removeLastPage() {
+        recyclerView.post(new Runnable() {
+            @Override
+            public void run() {
+                RemovedItemsInfo info = adapter.removeLastPage();
+                if (info != null) {
+                    currentPage = calcCurrentPage();
+                    adapter.notifyItemRangeRemoved(info.getStartPosition(), info.getCount());
+                }
             }
         });
     }
@@ -215,8 +262,13 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-    private Drawable genNextPlaceholderIcon() {
+    private Drawable getPlaceholderIcon(int pageNum) {
         // Get next icon from resources:
-        return getResources().getDrawable(placeholderIcons[currentPage % placeholderIcons.length]);
+        return getResources().getDrawable(placeholderIcons[pageNum % placeholderIcons.length]);
+    }
+
+    private int calcCurrentPage() {
+        int lastPageNum = adapter.getLastPageNum();
+        return lastPageNum < 0 ? 0 : lastPageNum + 1;
     }
 }

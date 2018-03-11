@@ -104,16 +104,66 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         return calcMoviesSize() + 1; // because the extra one is the progress bar
     }
 
-    int pushBackPage(int pageNum, ArrayList<MovieModel> page) {
+    int getFirstPageNum() {
+        if (movies.size() > 0) {
+            return movies.get(0).getPageNum();
+        } else {
+            return -1;
+        }
+    }
+
+    int getLastPageNum() {
+        if (movies.size() > 0) {
+            return movies.get(movies.size() - 1).getPageNum();
+        } else {
+            return -1;
+        }
+    }
+
+    void pushPageFront(int pageNum, ArrayList<MovieModel> page) {
+        movies.add(0, new Page<>(pageNum, page));
+    }
+
+    int pushPageBack(int pageNum, ArrayList<MovieModel> page) {
         int insertStartIndex = calcMoviesSize();
         movies.add(new Page<>(pageNum, page));
         return insertStartIndex;
     }
 
     int removeFirstPage() {
-        int removedCount = movies.get(0).getItems().size();
-        movies.remove(0);
-        return removedCount;
+        if (movies.size() > 0) {
+            int removedCount = movies.get(0).getItems().size();
+            movies.remove(0);
+            return removedCount;
+        } else {
+            return 0;
+        }
+    }
+
+    RemovedItemsInfo removeLastPage() {
+        if (movies.size() > 0) {
+            int lastPage = movies.size() - 1;
+            int removedStartPosition = getPosition(new ItemCoordinates(lastPage, 0));
+            int removedCount = movies.get(lastPage).getItems().size();
+            movies.remove(lastPage);
+            return new RemovedItemsInfo(removedStartPosition, removedCount);
+        } else {
+            return null;
+        }
+    }
+
+    private int getPosition(ItemCoordinates coordinates) {
+        int position = 0;
+        for (int page = 0; page < movies.size(); page++) {
+            if (page != coordinates.getPageNum()) {
+                position += movies.get(page).getItems().size();
+            } else {
+                position += coordinates.getItemIndex();
+                return position;
+            }
+        }
+        // Reached the end, the page is not found:
+        return -1;
     }
 
     ItemCoordinates getItemCoordinates(int position) {
