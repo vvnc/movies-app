@@ -139,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadNextPage() {
-        currentPage = calcCurrentPage();
         currentPlaceholderIcon = getPlaceholderIcon(currentPage);
         Thread loaderThread = new Thread(new Runnable() {
             public void run() {
@@ -152,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
                         newPortion.size(), savedItemPosition);
                 // Invalidate saved position:
                 savedItemPosition = NONE_SAVED_ITEM_POSITION;
+                currentPage++;
                 handler.sendMessage(msg);
             }
         });
@@ -200,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 RemovedItemsInfo info = adapter.removeLastPage();
                 if (info != null) {
-                    currentPage = calcCurrentPage();
+                    currentPage--;
                     adapter.notifyItemRangeRemoved(info.getStartPosition(), info.getCount());
                 }
             }
@@ -265,10 +265,5 @@ public class MainActivity extends AppCompatActivity {
     private Drawable getPlaceholderIcon(int pageNum) {
         // Get next icon from resources:
         return getResources().getDrawable(placeholderIcons[pageNum % placeholderIcons.length]);
-    }
-
-    private int calcCurrentPage() {
-        int lastPageNum = adapter.getLastPageNum();
-        return lastPageNum < 0 ? 0 : lastPageNum + 1;
     }
 }
