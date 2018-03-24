@@ -15,7 +15,7 @@ public abstract class CustomOnScrollListener extends RecyclerView.OnScrollListen
     @Override
     public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
         final int VISIBLE_THRESHOLD = 3;
-        final int MAX_ITEMS_ALLOWED = 30;
+        final int MAX_ITEMS_ALLOWED = 60;
 
         super.onScrolled(recyclerView, dx, dy);
         int totalCount = layoutManager.getItemCount();
