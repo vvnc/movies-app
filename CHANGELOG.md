@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.0.2] -- 2018-03-24
 ### Added
 - Scroll back with a progress wheel.
 
