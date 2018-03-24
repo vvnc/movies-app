@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
@@ -49,17 +50,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void handleMessage(android.os.Message msg) {
-            // Notify recycler view that the new items are inserted:
-            InsertItemsMessage msgObj = (InsertItemsMessage) msg.obj;
-            adapter.notifyItemRangeInserted(msgObj.getInsertIndex(), msgObj.getInsertCount());
+            if (msg.what == RVMsgType.INSERT_ITEMS.ordinal()) {
+                // Notify recycler view that the new items are inserted:
+                InsertItemsMessage msgObj = (InsertItemsMessage) msg.obj;
+                adapter.notifyItemRangeInserted(msgObj.getInsertIndex(), msgObj.getInsertCount());
 
-            // Scroll to saved item (if need to):
-            if (msgObj.getSavedItemPosition() != NONE_SAVED_ITEM_POSITION) {
-                layoutManager.scrollToPosition(msgObj.getSavedItemPosition());
+                // Scroll to saved item (if need to):
+                if (msgObj.getSavedItemPosition() != NONE_SAVED_ITEM_POSITION) {
+                    layoutManager.scrollToPosition(msgObj.getSavedItemPosition());
+                }
+
+                // Tell on scroll listener that the loading is over:
+                onScrollListener.setIsLoading(false);
+            } else if (msg.what == RVMsgType.INSERT_STUB_ITEM.ordinal()) {
+
+            } else if (msg.what == RVMsgType.REMOVE_ITEMS.ordinal()) {
+
+            } else {
+                Log.e("HANDLER","Unknown RecyclerView message type: " + msg.what);
             }
-
-            // Tell on scroll listener that the loading is over:
-            onScrollListener.setIsLoading(false);
         }
     }
 
@@ -147,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
                         currentPlaceholderIcon);
                 int insertStartIndex = adapter.pushPageBack(currentPage, newPortion);
                 Message msg = new Message();
+                msg.what = RVMsgType.INSERT_ITEMS.ordinal();
                 msg.obj = new RVUpdateHandler.InsertItemsMessage(insertStartIndex,
                         newPortion.size(), savedItemPosition);
                 // Invalidate saved position:
@@ -159,6 +169,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadPreviousPage() {
+        // TODO: add stub item to the RV
+
         int firstPageNum = adapter.getFirstPageNum();
         if (firstPageNum == 0) {
             // Reached the beginning, nothing to load. Undo the loading:
@@ -174,6 +186,7 @@ public class MainActivity extends AppCompatActivity {
                         currentPlaceholderIcon);
                 adapter.pushPageFront(previousPageNum, newPortion);
                 Message msg = new Message();
+                msg.what = RVMsgType.INSERT_ITEMS.ordinal();
                 msg.obj = new RVUpdateHandler.InsertItemsMessage(
                         0, newPortion.size(), NONE_SAVED_ITEM_POSITION);
                 handler.sendMessage(msg);
