@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
 
-class MovieModel {
+class MovieModel extends ItemModel {
     private static Calendar calendar;
     private static Random rand;
     private static final int PAGE_ITEMS_COUNT = 10;
@@ -46,14 +46,14 @@ class MovieModel {
         return poster;
     }
 
-    static ArrayList<MovieModel> loadPage(int page, Drawable placeholderIcon){
+    static ArrayList<ItemModel> loadPage(int page, Drawable placeholderIcon){
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             Log.d("LOAD_MORE_INTERRUPTED", e.toString());
         }
         // Debug version: randomly generated data:
-        ArrayList<MovieModel> data = new ArrayList<>(PAGE_ITEMS_COUNT);
+        ArrayList<ItemModel> data = new ArrayList<>(PAGE_ITEMS_COUNT);
         for(int i = 0x00; i < PAGE_ITEMS_COUNT; ++i) {
             data.add(new MovieModel(genNextTitle(page, i), genNextDate(), placeholderIcon));
         }

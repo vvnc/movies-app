@@ -12,8 +12,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHolder> {
-    private ArrayList<Page<MovieModel>> movies;
+public class Adapter extends RecyclerView.Adapter<Adapter.BaseViewHolder> {
+    private ArrayList<Page<ItemModel>> items;
 
     static abstract class BaseViewHolder extends RecyclerView.ViewHolder {
         private BaseViewHolder(View itemView) {
@@ -43,20 +43,21 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         }
     }
 
-    MoviesAdapter() {
-        this.movies = new ArrayList<>();
+    Adapter() {
+        this.items = new ArrayList<>();
     }
 
-    MoviesAdapter(int pageNum, ArrayList<MovieModel> firstPage) {
-        this.movies = new ArrayList<>();
-        this.movies.add(new Page<>(pageNum, firstPage));
+    Adapter(int pageNum, ArrayList<ItemModel> firstPage) {
+        this.items = new ArrayList<>();
+        this.items.add(new Page<>(pageNum, firstPage));
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (position >= calcMoviesSize()) {
+        if (position >= calcItemsCount()) {
             return ItemType.PROGRESS.ordinal();
         } else {
+            // TODO: get item by position, check it's type. If it's Progress then return PROGRESS
             return ItemType.MOVIE.ordinal();
         }
     }
@@ -82,7 +83,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
             ItemViewHolder h = (ItemViewHolder) holder;
             // - get element from your dataset at this position
             // - replace the contents of the view with that element
-            MovieModel item = getItem(position);
+            MovieModel item = (MovieModel) getItem(position);
             if (item == null) {
                 throw new MoviesException("Couldn't get the item by position: " + position);
             }
@@ -101,39 +102,39 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
 
     @Override
     public int getItemCount() {
-        return calcMoviesSize() + 1; // because the extra one is the progress bar
+        return calcItemsCount() + 1; // because the extra one is the progress bar
     }
 
     int getFirstPageNum() {
-        if (movies.size() > 0) {
-            return movies.get(0).getPageNum();
+        if (items.size() > 0) {
+            return items.get(0).getPageNum();
         } else {
             return -1;
         }
     }
 
     int getLastPageNum() {
-        if (movies.size() > 0) {
-            return movies.get(movies.size() - 1).getPageNum();
+        if (items.size() > 0) {
+            return items.get(items.size() - 1).getPageNum();
         } else {
             return -1;
         }
     }
 
-    void pushPageFront(int pageNum, ArrayList<MovieModel> page) {
-        movies.add(0, new Page<>(pageNum, page));
+    void pushPageFront(int pageNum, ArrayList<ItemModel> page) {
+        items.add(0, new Page<>(pageNum, page));
     }
 
-    int pushPageBack(int pageNum, ArrayList<MovieModel> page) {
-        int insertStartIndex = calcMoviesSize();
-        movies.add(new Page<>(pageNum, page));
+    int pushPageBack(int pageNum, ArrayList<ItemModel> page) {
+        int insertStartIndex = calcItemsCount();
+        items.add(new Page<>(pageNum, page));
         return insertStartIndex;
     }
 
     int removeFirstPage() {
-        if (movies.size() > 0) {
-            int removedCount = movies.get(0).getItems().size();
-            movies.remove(0);
+        if (items.size() > 0) {
+            int removedCount = items.get(0).getItems().size();
+            items.remove(0);
             return removedCount;
         } else {
             return 0;
@@ -141,11 +142,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
     }
 
     RemovedItemsInfo removeLastPage() {
-        if (movies.size() > 0) {
-            int lastPage = movies.size() - 1;
+        if (items.size() > 0) {
+            int lastPage = items.size() - 1;
             int removedStartPosition = getPosition(new ItemCoordinates(lastPage, 0));
-            int removedCount = movies.get(lastPage).getItems().size();
-            movies.remove(lastPage);
+            int removedCount = items.get(lastPage).getItems().size();
+            items.remove(lastPage);
             return new RemovedItemsInfo(removedStartPosition, removedCount);
         } else {
             return null;
@@ -154,9 +155,9 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
 
     private int getPosition(ItemCoordinates coordinates) {
         int position = 0;
-        for (int page = 0; page < movies.size(); page++) {
+        for (int page = 0; page < items.size(); page++) {
             if (page != coordinates.getPageNum()) {
-                position += movies.get(page).getItems().size();
+                position += items.get(page).getItems().size();
             } else {
                 position += coordinates.getItemIndex();
                 return position;
@@ -171,7 +172,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
             return null;
         }
         int currentPosition = position;
-        for (Page<MovieModel> page : movies) {
+        for (Page<ItemModel> page : items) {
             if (currentPosition < page.getItems().size()) {
                 return new ItemCoordinates(page.getPageNum(), currentPosition);
             } else {
@@ -181,23 +182,23 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.BaseViewHo
         return null; // reached the end of collection, position is out of boundaries
     }
 
-    private int calcMoviesSize() {
-        if (movies == null) {
+    private int calcItemsCount() {
+        if (items == null) {
             return 0;
         }
         int size = 0;
-        for (Page<MovieModel> page : movies) {
+        for (Page<ItemModel> page : items) {
             size += page.getItems().size();
         }
         return size;
     }
 
-    private MovieModel getItem(int position) {
+    private ItemModel getItem(int position) {
         if (position < 0) {
             return null;
         }
         int currentPosition = position;
-        for (Page<MovieModel> page : movies) {
+        for (Page<ItemModel> page : items) {
             if (currentPosition < page.getItems().size()) {
                 return page.getItems().get(currentPosition);
             } else {

@@ -16,11 +16,11 @@ public class MainActivity extends AppCompatActivity {
         static class InsertItemsMessage {
             private int savedItemPosition;
             private int insertPageNum;
-            private ArrayList<MovieModel> newPortion;
+            private ArrayList<ItemModel> newPortion;
 
             InsertItemsMessage(int savedItemPosition,
                                int insertPageNum,
-                               ArrayList<MovieModel> newPortion) {
+                               ArrayList<ItemModel> newPortion) {
                 this.savedItemPosition = savedItemPosition;
                 this.insertPageNum = insertPageNum;
                 this.newPortion = newPortion;
@@ -34,16 +34,16 @@ public class MainActivity extends AppCompatActivity {
                 return insertPageNum;
             }
 
-            ArrayList<MovieModel> getNewPortion() {
+            ArrayList<ItemModel> getNewPortion() {
                 return newPortion;
             }
         }
 
-        private MoviesAdapter adapter;
+        private Adapter adapter;
         private CustomOnScrollListener onScrollListener;
         private LinearLayoutManager layoutManager;
 
-        RVUpdateHandler(MoviesAdapter adapter,
+        RVUpdateHandler(Adapter adapter,
                         CustomOnScrollListener onScrollListener,
                         LinearLayoutManager layoutManager) {
             this.adapter = adapter;
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private MoviesAdapter adapter;
+    private Adapter adapter;
     private RVUpdateHandler handler;
     private RecyclerView recyclerView;
     private LinearLayoutManager layoutManager;
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initPlaceholderIcons();
         layoutManager = new LinearLayoutManager(this);
-        adapter = new MoviesAdapter();
+        adapter = new Adapter();
         recyclerView = findViewById(R.id.movies_recycler_view);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
         currentPlaceholderIcon = getPlaceholderIcon(currentPage);
         Thread loaderThread = new Thread(new Runnable() {
             public void run() {
-                ArrayList<MovieModel> newPortion = MovieModel.loadPage(
+                ArrayList<ItemModel> newPortion = MovieModel.loadPage(
                         currentPage,
                         currentPlaceholderIcon);
                 Message msg = new Message();
@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
         currentPlaceholderIcon = getPlaceholderIcon(previousPageNum);
         Thread loaderThread = new Thread(new Runnable() {
             public void run() {
-                ArrayList<MovieModel> newPortion = MovieModel.loadPage(
+                ArrayList<ItemModel> newPortion = MovieModel.loadPage(
                         previousPageNum,
                         currentPlaceholderIcon);
                 Message msg = new Message();
