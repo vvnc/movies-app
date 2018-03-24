@@ -48,7 +48,7 @@ class MovieModel extends ItemModel {
 
     static ArrayList<ItemModel> loadPage(int page, Drawable placeholderIcon){
         try {
-            Thread.sleep(3000);
+            Thread.sleep(300);
         } catch (InterruptedException e) {
             Log.d("LOAD_MORE_INTERRUPTED", e.toString());
         }
