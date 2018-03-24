@@ -81,16 +81,20 @@ public class MainActivity extends AppCompatActivity {
                 // Tell on scroll listener that the loading is over:
                 onScrollListener.setIsLoading(false);
             } else if (msg.what == RVMsgType.PUSH_STUB_FRONT.ordinal()) {
+                InsertItemsMessage msgObj = (InsertItemsMessage) msg.obj;
 
+                // Push front the new items:
+                adapter.pushPageFront(msgObj.getInsertPageNum(), msgObj.getNewPortion());
+
+                // Notify recycler view that the new items are inserted:
+                adapter.notifyItemRangeInserted(0, msgObj.getNewPortion().size());
+
+                // The load is not over, don't set it false!
             } else if (msg.what == RVMsgType.REMOVE_FIRST_PAGE.ordinal()) {
                 int removedCount = adapter.removeFirstPage();
                 if (removedCount > -1) {
                     adapter.notifyItemRangeRemoved(0, removedCount);
                 }
-
-            } else if (msg.what == RVMsgType.REMOVE_LAST_PAGE.ordinal()) {
-
-
             } else {
                 Log.e("HANDLER", "Unknown RecyclerView message type: " + msg.what);
             }
@@ -193,8 +197,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadPreviousPage() {
-        // TODO: add stub item to the RV
-
         int firstPageNum = adapter.getFirstPageNum();
         if (firstPageNum == 0) {
             // Reached the beginning, nothing to load. Undo the loading:
@@ -205,10 +207,24 @@ public class MainActivity extends AppCompatActivity {
         currentPlaceholderIcon = getPlaceholderIcon(previousPageNum);
         Thread loaderThread = new Thread(new Runnable() {
             public void run() {
+                // Add stub item to the RV:
+                ArrayList<ItemModel> stubPage = new ArrayList<>();
+                stubPage.add( new StubModel() );
+                Message msg = new Message();
+                msg.what = RVMsgType.PUSH_STUB_FRONT.ordinal();
+                msg.obj = new RVUpdateHandler.InsertItemsMessage(NONE_SAVED_ITEM_POSITION,
+                        previousPageNum, stubPage);
+                handler.sendMessage(msg);
+
+                // Load real data:
                 ArrayList<ItemModel> newPortion = MovieModel.loadPage(
                         previousPageNum,
                         currentPlaceholderIcon);
-                Message msg = new Message();
+
+                // Remove stub page:
+                removeFirstPage();
+
+                msg = new Message();
                 msg.what = RVMsgType.PUSH_ITEMS_FRONT.ordinal();
                 msg.obj = new RVUpdateHandler.InsertItemsMessage(NONE_SAVED_ITEM_POSITION,
                         previousPageNum, newPortion);

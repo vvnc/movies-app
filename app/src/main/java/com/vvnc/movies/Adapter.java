@@ -57,8 +57,12 @@ public class Adapter extends RecyclerView.Adapter<Adapter.BaseViewHolder> {
         if (position >= calcItemsCount()) {
             return ItemType.PROGRESS.ordinal();
         } else {
-            // TODO: get item by position, check it's type. If it's Progress then return PROGRESS
-            return ItemType.MOVIE.ordinal();
+            ItemModel item = getItem(position);
+            if (item instanceof MovieModel) {
+                return ItemType.MOVIE.ordinal();
+            } else {
+                return ItemType.PROGRESS.ordinal();
+            }
         }
     }
 
