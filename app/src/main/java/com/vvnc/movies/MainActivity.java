@@ -83,6 +83,10 @@ public class MainActivity extends AppCompatActivity {
             } else if (msg.what == RVMsgType.PUSH_STUB_FRONT.ordinal()) {
 
             } else if (msg.what == RVMsgType.REMOVE_FIRST_PAGE.ordinal()) {
+                int removedCount = adapter.removeFirstPage();
+                if (removedCount > -1) {
+                    adapter.notifyItemRangeRemoved(0, removedCount);
+                }
 
             } else if (msg.what == RVMsgType.REMOVE_LAST_PAGE.ordinal()) {
 
@@ -214,15 +218,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void removeFirstPage() {
-        recyclerView.post(new Runnable() {
-            @Override
-            public void run() {
-                int removedCount = adapter.removeFirstPage();
-                if (removedCount > -1) {
-                    adapter.notifyItemRangeRemoved(0, removedCount);
-                }
-            }
-        });
+        Message msg = new Message();
+        msg.what = RVMsgType.REMOVE_FIRST_PAGE.ordinal();
+        handler.sendMessage(msg);
     }
 
     private void removeLastPage() {
