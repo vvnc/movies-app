@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
 
             } else if (msg.what == RVMsgType.REMOVE_LAST_PAGE.ordinal()) {
 
+
             } else {
                 Log.e("HANDLER", "Unknown RecyclerView message type: " + msg.what);
             }
@@ -224,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void removeLastPage() {
-        recyclerView.post(new Runnable() {
+        handler.post(new Runnable() {
             @Override
             public void run() {
                 RemovedItemsInfo info = adapter.removeLastPage();
