@@ -14,34 +14,36 @@ import android.util.Log;
 public class MainActivity extends AppCompatActivity {
     private static class RVUpdateHandler extends Handler {
         static class InsertItemsMessage {
-            private int insertIndex;
-            private int insertCount;
             private int savedItemPosition;
+            private int insertPageNum;
+            private ArrayList<ItemModel> newPortion;
 
-            InsertItemsMessage(int insertIndex, int insertCount, int savedItemPosition) {
-                this.insertIndex = insertIndex;
-                this.insertCount = insertCount;
+            InsertItemsMessage(int savedItemPosition,
+                               int insertPageNum,
+                               ArrayList<ItemModel> newPortion) {
                 this.savedItemPosition = savedItemPosition;
-            }
-
-            int getInsertIndex() {
-                return insertIndex;
-            }
-
-            int getInsertCount() {
-                return insertCount;
+                this.insertPageNum = insertPageNum;
+                this.newPortion = newPortion;
             }
 
             int getSavedItemPosition() {
                 return savedItemPosition;
             }
+
+            int getInsertPageNum() {
+                return insertPageNum;
+            }
+
+            ArrayList<ItemModel> getNewPortion() {
+                return newPortion;
+            }
         }
 
-        private MoviesAdapter adapter;
+        private Adapter adapter;
         private CustomOnScrollListener onScrollListener;
         private LinearLayoutManager layoutManager;
 
-        RVUpdateHandler(MoviesAdapter adapter,
+        RVUpdateHandler(Adapter adapter,
                         CustomOnScrollListener onScrollListener,
                         LinearLayoutManager layoutManager) {
             this.adapter = adapter;
@@ -50,24 +52,60 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void handleMessage(android.os.Message msg) {
-            // Notify recycler view that the new items are inserted:
-            InsertItemsMessage msgObj = (InsertItemsMessage) msg.obj;
-            adapter.notifyItemRangeInserted(msgObj.getInsertIndex(), msgObj.getInsertCount());
+            if (msg.what == RVMsgType.PUSH_ITEMS_BACK.ordinal()) {
+                InsertItemsMessage msgObj = (InsertItemsMessage) msg.obj;
 
-            // Scroll to saved item (if need to):
-            if (msgObj.getSavedItemPosition() != NONE_SAVED_ITEM_POSITION) {
-                layoutManager.scrollToPosition(msgObj.getSavedItemPosition());
+                // Push back the new items:
+                int insertStartIndex = adapter.pushPageBack(msgObj.getInsertPageNum(),
+                        msgObj.getNewPortion());
+
+                // Notify recycler view that the new items are inserted:
+                adapter.notifyItemRangeInserted(insertStartIndex, msgObj.getNewPortion().size());
+
+                // Scroll to saved item (if need to):
+                if (msgObj.getSavedItemPosition() != NONE_SAVED_ITEM_POSITION) {
+                    layoutManager.scrollToPosition(msgObj.getSavedItemPosition());
+                }
+
+                // Tell on scroll listener that the loading is over:
+                onScrollListener.setIsLoading(false);
+            } else if (msg.what == RVMsgType.PUSH_ITEMS_FRONT.ordinal()) {
+                InsertItemsMessage msgObj = (InsertItemsMessage) msg.obj;
+
+                // Push front the new items:
+                adapter.pushPageFront(msgObj.getInsertPageNum(), msgObj.getNewPortion());
+
+                // Notify recycler view that the new items are inserted:
+                adapter.notifyItemRangeInserted(0, msgObj.getNewPortion().size());
+
+                // Tell on scroll listener that the loading is over:
+                onScrollListener.setIsLoading(false);
+            } else if (msg.what == RVMsgType.PUSH_STUB_FRONT.ordinal()) {
+                InsertItemsMessage msgObj = (InsertItemsMessage) msg.obj;
+
+                // Push front the new items:
+                adapter.pushPageFront(msgObj.getInsertPageNum(), msgObj.getNewPortion());
+
+                // Notify recycler view that the new items are inserted:
+                adapter.notifyItemRangeInserted(0, msgObj.getNewPortion().size());
+
+                // The load is not over, don't set it false!
+            } else if (msg.what == RVMsgType.REMOVE_FIRST_PAGE.ordinal()) {
+                int removedCount = adapter.removeFirstPage();
+                if (removedCount > -1) {
+                    adapter.notifyItemRangeRemoved(0, removedCount);
+                }
+            } else {
+                Log.e("HANDLER", "Unknown RecyclerView message type: " + msg.what);
             }
-
-            // Tell on scroll listener that the loading is over:
-            onScrollListener.setIsLoading(false);
         }
     }
 
-    private MoviesAdapter adapter;
+    private Adapter adapter;
     private RVUpdateHandler handler;
     private RecyclerView recyclerView;
     private LinearLayoutManager layoutManager;
+    private CustomOnScrollListener onScrollListener;
     private int[] placeholderIcons;
     private int currentPage;
     private int savedItemPosition;
@@ -92,22 +130,31 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initPlaceholderIcons();
         layoutManager = new LinearLayoutManager(this);
-        adapter = new MoviesAdapter();
+        adapter = new Adapter();
         recyclerView = findViewById(R.id.movies_recycler_view);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(adapter);
 
         // Add custom on scroll listener:
-        CustomOnScrollListener onScrollListener = new CustomOnScrollListener(layoutManager,
-                currentPage) {
+        onScrollListener = new CustomOnScrollListener(layoutManager) {
             @Override
-            public void onLoadPage(int page) {
-                loadMoreData(page);
+            public void onLoadNextPage() {
+                loadNextPage();
             }
 
             @Override
-            public void onTooManyItems() {
-                removeFirstItems();
+            public void onLoadPreviousPage() {
+                loadPreviousPage();
+            }
+
+            @Override
+            public void onRemoveFirstItems() {
+                removeFirstPage();
+            }
+
+            @Override
+            public void onRemoveLastItems() {
+                removeLastPage();
             }
         };
         handler = new RVUpdateHandler(adapter, onScrollListener, layoutManager);
@@ -129,33 +176,79 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
     }
 
-    private void loadMoreData(int page) {
-        currentPage = page;
-        currentPlaceholderIcon = genNextPlaceholderIcon();
+    private void loadNextPage() {
+        currentPlaceholderIcon = getPlaceholderIcon(currentPage);
         Thread loaderThread = new Thread(new Runnable() {
             public void run() {
-                ArrayList<MovieModel> newPortion = MovieModel.loadPage(
+                ArrayList<ItemModel> newPortion = MovieModel.loadPage(
                         currentPage,
                         currentPlaceholderIcon);
-                int insertStartIndex = adapter.pushBackPage(currentPage, newPortion);
                 Message msg = new Message();
-                msg.obj = new RVUpdateHandler.InsertItemsMessage(insertStartIndex,
-                        newPortion.size(), savedItemPosition);
+                msg.what = RVMsgType.PUSH_ITEMS_BACK.ordinal();
+                msg.obj = new RVUpdateHandler.InsertItemsMessage(savedItemPosition,
+                        currentPage, newPortion);
                 // Invalidate saved position:
                 savedItemPosition = NONE_SAVED_ITEM_POSITION;
+                currentPage++;
                 handler.sendMessage(msg);
             }
         });
         loaderThread.start();
     }
 
-    private void removeFirstItems() {
-        recyclerView.post(new Runnable() {
+    private void loadPreviousPage() {
+        int firstPageNum = adapter.getFirstPageNum();
+        if (firstPageNum == 0) {
+            // Reached the beginning, nothing to load. Undo the loading:
+            onScrollListener.setIsLoading(false);
+            return;
+        }
+        final int previousPageNum = firstPageNum == -1 ? 0 : firstPageNum - 1;
+        currentPlaceholderIcon = getPlaceholderIcon(previousPageNum);
+        Thread loaderThread = new Thread(new Runnable() {
+            public void run() {
+                // Add stub item to the RV:
+                ArrayList<ItemModel> stubPage = new ArrayList<>();
+                stubPage.add( new StubModel() );
+                Message msg = new Message();
+                msg.what = RVMsgType.PUSH_STUB_FRONT.ordinal();
+                msg.obj = new RVUpdateHandler.InsertItemsMessage(NONE_SAVED_ITEM_POSITION,
+                        previousPageNum, stubPage);
+                handler.sendMessage(msg);
+
+                // Load real data:
+                ArrayList<ItemModel> newPortion = MovieModel.loadPage(
+                        previousPageNum,
+                        currentPlaceholderIcon);
+
+                // Remove stub page:
+                removeFirstPage();
+
+                msg = new Message();
+                msg.what = RVMsgType.PUSH_ITEMS_FRONT.ordinal();
+                msg.obj = new RVUpdateHandler.InsertItemsMessage(NONE_SAVED_ITEM_POSITION,
+                        previousPageNum, newPortion);
+                handler.sendMessage(msg);
+            }
+        });
+        loaderThread.start();
+    }
+
+    private void removeFirstPage() {
+        Message msg = new Message();
+        msg.what = RVMsgType.REMOVE_FIRST_PAGE.ordinal();
+        handler.sendMessage(msg);
+    }
+
+    private void removeLastPage() {
+        handler.post(new Runnable() {
             @Override
             public void run() {
-                // Just remove the first page:
-                int removedCount = adapter.removeFirstPage();
-                adapter.notifyItemRangeRemoved(0, removedCount);
+                RemovedItemsInfo info = adapter.removeLastPage();
+                if (info != null) {
+                    currentPage--;
+                    adapter.notifyItemRangeRemoved(info.getStartPosition(), info.getCount());
+                }
             }
         });
     }
@@ -215,8 +308,8 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-    private Drawable genNextPlaceholderIcon() {
+    private Drawable getPlaceholderIcon(int pageNum) {
         // Get next icon from resources:
-        return getResources().getDrawable(placeholderIcons[currentPage % placeholderIcons.length]);
+        return getResources().getDrawable(placeholderIcons[pageNum % placeholderIcons.length]);
     }
 }
